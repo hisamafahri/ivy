@@ -677,4 +677,138 @@ describe("Ivy", () => {
       });
     });
   });
+
+  describe("request headers", () => {
+    it("should access single header by name", async () => {
+      const app = new Ivy();
+
+      app.get("/test", (c) => {
+        const userAgent = c.req.header("User-Agent");
+        return c.text(`UA: ${userAgent}`);
+      });
+
+      const req = new Request("http://localhost/test", {
+        method: "GET",
+        headers: { "User-Agent": "Mozilla/5.0" },
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.text()).toBe("UA: Mozilla/5.0");
+    });
+
+    it("should return undefined for non-existent header", async () => {
+      const app = new Ivy();
+
+      app.get("/test", (c) => {
+        const header = c.req.header("X-Custom-Header");
+        return c.text(header === undefined ? "undefined" : header);
+      });
+
+      const req = new Request("http://localhost/test", { method: "GET" });
+      const response = await app.fetch(req);
+
+      expect(await response.text()).toBe("undefined");
+    });
+
+    it("should handle case-insensitive header names", async () => {
+      const app = new Ivy();
+
+      app.get("/test", (c) => {
+        const contentType1 = c.req.header("Content-Type");
+        const contentType2 = c.req.header("content-type");
+        const contentType3 = c.req.header("CONTENT-TYPE");
+        return c.json({
+          contentType1,
+          contentType2,
+          contentType3,
+        });
+      });
+
+      const req = new Request("http://localhost/test", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.json()).toEqual({
+        contentType1: "application/json",
+        contentType2: "application/json",
+        contentType3: "application/json",
+      });
+    });
+
+    it("should access multiple different headers", async () => {
+      const app = new Ivy();
+
+      app.get("/api", (c) => {
+        const userAgent = c.req.header("User-Agent");
+        const accept = c.req.header("Accept");
+        const authorization = c.req.header("Authorization");
+        return c.json({ userAgent, accept, authorization });
+      });
+
+      const req = new Request("http://localhost/api", {
+        method: "GET",
+        headers: {
+          "User-Agent": "TestClient/1.0",
+          Accept: "application/json",
+          Authorization: "Bearer token123",
+        },
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.json()).toEqual({
+        userAgent: "TestClient/1.0",
+        accept: "application/json",
+        authorization: "Bearer token123",
+      });
+    });
+
+    it("should work with custom headers", async () => {
+      const app = new Ivy();
+
+      app.post("/webhook", (c) => {
+        const signature = c.req.header("X-Webhook-Signature");
+        const timestamp = c.req.header("X-Webhook-Timestamp");
+        return c.json({ signature, timestamp });
+      });
+
+      const req = new Request("http://localhost/webhook", {
+        method: "POST",
+        headers: {
+          "X-Webhook-Signature": "sha256=abc123",
+          "X-Webhook-Timestamp": "1234567890",
+        },
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.json()).toEqual({
+        signature: "sha256=abc123",
+        timestamp: "1234567890",
+      });
+    });
+
+    it("should combine headers with path params and query params", async () => {
+      const app = new Ivy();
+
+      app.get("/users/:id", (c) => {
+        const id = c.req.param("id");
+        const format = c.req.query("format");
+        const accept = c.req.header("Accept");
+        return c.json({ userId: id, format, accept });
+      });
+
+      const req = new Request("http://localhost/users/123?format=compact", {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.json()).toEqual({
+        userId: "123",
+        format: "compact",
+        accept: "application/json",
+      });
+    });
+  });
 });

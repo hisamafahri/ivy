@@ -7,6 +7,7 @@ export interface IvyRequest {
     (name: string): string | undefined;
   };
   queries: (name: string) => string[] | undefined;
+  header: (name: string) => string | undefined;
   href: string;
   pathname: string;
   routePathname: string;
@@ -14,7 +15,6 @@ export interface IvyRequest {
 
 export class Context {
   // TODO:
-  // - headers
   // - cookies
   // - body parsers:
   //   * json
@@ -59,6 +59,7 @@ export class Context {
         const values = searchParams.getAll(name);
         return values.length > 0 ? values : undefined;
       },
+      header: (name: string) => rawRequest.headers.get(name) ?? undefined,
       href: rawRequest.url,
       pathname: url.pathname,
       routePathname: routePathname,
