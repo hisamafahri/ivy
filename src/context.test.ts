@@ -184,4 +184,106 @@ describe("Context", () => {
       expect(body).toEqual({ key: "value" });
     });
   });
+
+  describe("req.query()", () => {
+    it("should return specific query parameter", () => {
+      const req = new Request("http://localhost/search?q=hello&limit=10");
+      const ctx = new Context(req);
+
+      expect(ctx.req.query("q")).toBe("hello");
+      expect(ctx.req.query("limit")).toBe("10");
+    });
+
+    it("should return undefined for non-existent query parameter", () => {
+      const req = new Request("http://localhost/search?q=hello");
+      const ctx = new Context(req);
+
+      expect(ctx.req.query("nonExistent")).toBeUndefined();
+    });
+
+    it("should return all query parameters when called without arguments", () => {
+      const req = new Request(
+        "http://localhost/search?q=hello&limit=10&offset=0",
+      );
+      const ctx = new Context(req);
+
+      const allParams = ctx.req.query();
+      expect(allParams).toEqual({
+        q: "hello",
+        limit: "10",
+        offset: "0",
+      });
+    });
+
+    it("should return empty object when no query parameters", () => {
+      const req = new Request("http://localhost/search");
+      const ctx = new Context(req);
+
+      const allParams = ctx.req.query();
+      expect(allParams).toEqual({});
+    });
+
+    it("should handle URL-encoded query parameters", () => {
+      const req = new Request(
+        "http://localhost/search?q=hello%20world&name=John%20Doe",
+      );
+      const ctx = new Context(req);
+
+      expect(ctx.req.query("q")).toBe("hello world");
+      expect(ctx.req.query("name")).toBe("John Doe");
+    });
+
+    it("should return first value for duplicate query parameters", () => {
+      const req = new Request("http://localhost/search?tag=A&tag=B");
+      const ctx = new Context(req);
+
+      expect(ctx.req.query("tag")).toBe("A");
+    });
+  });
+
+  describe("req.queries()", () => {
+    it("should return array of values for multiple query parameters", () => {
+      const req = new Request("http://localhost/search?tags=A&tags=B&tags=C");
+      const ctx = new Context(req);
+
+      const tags = ctx.req.queries("tags");
+      expect(tags).toEqual(["A", "B", "C"]);
+    });
+
+    it("should return array with single value for single parameter", () => {
+      const req = new Request("http://localhost/search?tag=A");
+      const ctx = new Context(req);
+
+      const tags = ctx.req.queries("tag");
+      expect(tags).toEqual(["A"]);
+    });
+
+    it("should return undefined for non-existent parameter", () => {
+      const req = new Request("http://localhost/search?q=hello");
+      const ctx = new Context(req);
+
+      const tags = ctx.req.queries("tags");
+      expect(tags).toBeUndefined();
+    });
+
+    it("should handle multiple parameters with different names", () => {
+      const req = new Request(
+        "http://localhost/search?tags=A&tags=B&colors=red&colors=blue",
+      );
+      const ctx = new Context(req);
+
+      expect(ctx.req.queries("tags")).toEqual(["A", "B"]);
+      expect(ctx.req.queries("colors")).toEqual(["red", "blue"]);
+    });
+
+    it("should handle URL-encoded values", () => {
+      const req = new Request(
+        "http://localhost/search?tags=hello%20world&tags=foo%20bar",
+      );
+      const ctx = new Context(req);
+
+      const tags = ctx.req.queries("tags");
+      expect(tags).toEqual(["hello world", "foo bar"]);
+    });
+  });
 });

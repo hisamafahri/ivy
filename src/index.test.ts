@@ -119,7 +119,9 @@ describe("Ivy", () => {
     it("should register multiple methods with multiple paths", async () => {
       const app = new Ivy();
 
-      app.on(["GET", "POST"], ["/api/v1", "/api/v2"], (c) => c.text("Multi response"));
+      app.on(["GET", "POST"], ["/api/v1", "/api/v2"], (c) =>
+        c.text("Multi response"),
+      );
 
       const tests = [
         { method: "GET", path: "/api/v1" },
@@ -129,7 +131,9 @@ describe("Ivy", () => {
       ];
 
       for (const test of tests) {
-        const req = new Request(`http://localhost${test.path}`, { method: test.method });
+        const req = new Request(`http://localhost${test.path}`, {
+          method: test.method,
+        });
         const res = await app.fetch(req);
         expect(await res.text()).toBe("Multi response");
       }
@@ -151,11 +155,15 @@ describe("Ivy", () => {
       app.get("/get-route", (c) => c.text("GET helper"));
       app.on("POST", "/post-route", (c) => c.text("POST on method"));
 
-      const getReq = new Request("http://localhost/get-route", { method: "GET" });
+      const getReq = new Request("http://localhost/get-route", {
+        method: "GET",
+      });
       const getRes = await app.fetch(getReq);
       expect(await getRes.text()).toBe("GET helper");
 
-      const postReq = new Request("http://localhost/post-route", { method: "POST" });
+      const postReq = new Request("http://localhost/post-route", {
+        method: "POST",
+      });
       const postRes = await app.fetch(postReq);
       expect(await postRes.text()).toBe("POST on method");
     });
@@ -294,7 +302,9 @@ describe("Ivy", () => {
 
       app.get("/wild/*/card", (c) => c.text("GET /wild/*/card"));
 
-      const req = new Request("http://localhost/wild/anything/card", { method: "GET" });
+      const req = new Request("http://localhost/wild/anything/card", {
+        method: "GET",
+      });
       const response = await app.fetch(req);
 
       expect(response.status).toBe(200);
@@ -306,11 +316,15 @@ describe("Ivy", () => {
 
       app.get("/files/*/download", (c) => c.text("Download"));
 
-      const req1 = new Request("http://localhost/files/123/download", { method: "GET" });
+      const req1 = new Request("http://localhost/files/123/download", {
+        method: "GET",
+      });
       const res1 = await app.fetch(req1);
       expect(await res1.text()).toBe("Download");
 
-      const req2 = new Request("http://localhost/files/abc/download", { method: "GET" });
+      const req2 = new Request("http://localhost/files/abc/download", {
+        method: "GET",
+      });
       const res2 = await app.fetch(req2);
       expect(await res2.text()).toBe("Download");
     });
@@ -320,7 +334,9 @@ describe("Ivy", () => {
 
       app.get("/api/*/users/*/profile", (c) => c.text("Profile"));
 
-      const req = new Request("http://localhost/api/v1/users/123/profile", { method: "GET" });
+      const req = new Request("http://localhost/api/v1/users/123/profile", {
+        method: "GET",
+      });
       const response = await app.fetch(req);
 
       expect(response.status).toBe(200);
@@ -364,7 +380,9 @@ describe("Ivy", () => {
         return c.json({ userId, postId });
       });
 
-      const req = new Request("http://localhost/users/123/posts/456", { method: "GET" });
+      const req = new Request("http://localhost/users/123/posts/456", {
+        method: "GET",
+      });
       const response = await app.fetch(req);
 
       expect(response.status).toBe(200);
@@ -379,11 +397,15 @@ describe("Ivy", () => {
         return c.text(`Product ${id}`);
       });
 
-      const req1 = new Request("http://localhost/product/abc", { method: "GET" });
+      const req1 = new Request("http://localhost/product/abc", {
+        method: "GET",
+      });
       const res1 = await app.fetch(req1);
       expect(await res1.text()).toBe("Product abc");
 
-      const req2 = new Request("http://localhost/product/123", { method: "GET" });
+      const req2 = new Request("http://localhost/product/123", {
+        method: "GET",
+      });
       const res2 = await app.fetch(req2);
       expect(await res2.text()).toBe("Product 123");
     });
@@ -410,10 +432,15 @@ describe("Ivy", () => {
         return c.json({ version, action: "create" });
       });
 
-      const req = new Request("http://localhost/api/v2/users", { method: "POST" });
+      const req = new Request("http://localhost/api/v2/users", {
+        method: "POST",
+      });
       const response = await app.fetch(req);
 
-      expect(await response.json()).toEqual({ version: "v2", action: "create" });
+      expect(await response.json()).toEqual({
+        version: "v2",
+        action: "create",
+      });
     });
 
     it("should combine with .on() method", async () => {
@@ -424,11 +451,15 @@ describe("Ivy", () => {
         return c.text(`Resource ${id}`);
       });
 
-      const getReq = new Request("http://localhost/resource/123", { method: "GET" });
+      const getReq = new Request("http://localhost/resource/123", {
+        method: "GET",
+      });
       const getRes = await app.fetch(getReq);
       expect(await getRes.text()).toBe("Resource 123");
 
-      const postReq = new Request("http://localhost/resource/456", { method: "POST" });
+      const postReq = new Request("http://localhost/resource/456", {
+        method: "POST",
+      });
       const postRes = await app.fetch(postReq);
       expect(await postRes.text()).toBe("Resource 456");
     });
@@ -443,10 +474,100 @@ describe("Ivy", () => {
         });
       });
 
-      const req = new Request("http://localhost/user/456/profile/settings", { method: "GET" });
+      const req = new Request("http://localhost/user/456/profile/settings", {
+        method: "GET",
+      });
       const response = await app.fetch(req);
 
       expect(await response.json()).toEqual({ id: "456", section: "settings" });
+    });
+  });
+
+  describe("query parameters", () => {
+    it("should access single query parameter", async () => {
+      const app = new Ivy();
+
+      app.get("/search", (c) => {
+        const q = c.req.query("q");
+        return c.text(`Search: ${q}`);
+      });
+
+      const req = new Request("http://localhost/search?q=hello", {
+        method: "GET",
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.text()).toBe("Search: hello");
+    });
+
+    it("should access all query parameters at once", async () => {
+      const app = new Ivy();
+
+      app.get("/search", (c) => {
+        const { q, limit, offset } = c.req.query();
+        return c.json({ q, limit, offset });
+      });
+
+      const req = new Request(
+        "http://localhost/search?q=test&limit=10&offset=20",
+        { method: "GET" },
+      );
+      const response = await app.fetch(req);
+
+      expect(await response.json()).toEqual({
+        q: "test",
+        limit: "10",
+        offset: "20",
+      });
+    });
+
+    it("should get multiple values with queries()", async () => {
+      const app = new Ivy();
+
+      app.get("/filter", (c) => {
+        const tags = c.req.queries("tags");
+        return c.json({ tags });
+      });
+
+      const req = new Request("http://localhost/filter?tags=A&tags=B&tags=C", {
+        method: "GET",
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.json()).toEqual({ tags: ["A", "B", "C"] });
+    });
+
+    it("should combine path params and query params", async () => {
+      const app = new Ivy();
+
+      app.get("/users/:id", (c) => {
+        const id = c.req.param("id");
+        const format = c.req.query("format");
+        return c.json({ userId: id, format });
+      });
+
+      const req = new Request("http://localhost/users/123?format=json", {
+        method: "GET",
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.json()).toEqual({ userId: "123", format: "json" });
+    });
+
+    it("should handle URL-encoded query parameters", async () => {
+      const app = new Ivy();
+
+      app.get("/search", (c) => {
+        const q = c.req.query("q");
+        return c.text(`Search: ${q}`);
+      });
+
+      const req = new Request("http://localhost/search?q=hello%20world", {
+        method: "GET",
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.text()).toBe("Search: hello world");
     });
   });
 });

@@ -1,15 +1,55 @@
 export class Context {
+  // TODO:
+  // - headers
+  // - cookies
+  // - body parsers:
+  //   * json
+  //   * form
+  //   * text
+  //   * arrayBuffer
+  //   * blob
+  // - body validators (blocked by middleware implementation)
   req: {
     raw: Request;
     param: (name: string) => string | undefined;
     params: Record<string, string>;
+    query: {
+      (): Record<string, string>;
+      (name: string): string | undefined;
+    };
+    queries: (name: string) => string[] | undefined;
   };
 
   constructor(rawRequest: Request, params: Record<string, string> = {}) {
+    const url = new URL(rawRequest.url);
+    const searchParams = url.searchParams;
+
+    // Create query function with overloads
+    const queryFn = ((name?: string) => {
+      if (name === undefined) {
+        // Return all query params as an object
+        const allParams: Record<string, string> = {};
+        searchParams.forEach((value, key) => {
+          allParams[key] = value;
+        });
+        return allParams;
+      }
+      // Return specific query param
+      return searchParams.get(name) ?? undefined;
+    }) as {
+      (): Record<string, string>;
+      (name: string): string | undefined;
+    };
+
     this.req = {
       raw: rawRequest,
       params: params,
       param: (name: string) => params[name],
+      query: queryFn,
+      queries: (name: string) => {
+        const values = searchParams.getAll(name);
+        return values.length > 0 ? values : undefined;
+      },
     };
   }
 

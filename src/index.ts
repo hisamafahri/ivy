@@ -20,24 +20,34 @@ export default class Ivy {
     this.fetch = this.fetch.bind(this);
   }
 
-  private compileRoute(path: string): { pattern: RegExp; paramNames: string[] } {
+  // NOTE:
+  // This is a simple route compiler that supports:
+  // - Static paths (e.g., /about)
+  // - Parameterized paths (e.g., /users/:id)
+  // - Wildcard paths (e.g., /files/*)
+  //
+  // At the moment, I am not sure about how "secure" this implementation is.
+  private compileRoute(path: string): {
+    pattern: RegExp;
+    paramNames: string[];
+  } {
     const paramNames: string[] = [];
-    
+
     // Escape special regex characters except * and :
-    let pattern = path.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-    
+    let pattern = path.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+
     // Replace :param with named capture groups
     pattern = pattern.replace(/:(\w+)/g, (_, paramName) => {
       paramNames.push(paramName);
-      return '([^/]+)';
+      return "([^/]+)";
     });
-    
+
     // Replace * with wildcard pattern
-    pattern = pattern.replace(/\*/g, '[^/]+');
-    
+    pattern = pattern.replace(/\*/g, "[^/]+");
+
     return {
       pattern: new RegExp(`^${pattern}$`),
-      paramNames
+      paramNames,
     };
   }
 
@@ -99,14 +109,14 @@ export default class Ivy {
         const match = pathname.match(route.pattern);
         if (match) {
           const params: Record<string, string> = {};
-          
+
           // Extract params if any
           if (route.paramNames && route.paramNames.length > 0) {
             route.paramNames.forEach((name, index) => {
               params[name] = match[index + 1];
             });
           }
-          
+
           const context = new Context(req, params);
           return await route.handler(context);
         }
