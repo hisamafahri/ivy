@@ -51,6 +51,12 @@ export default class Ivy {
     };
   }
 
+  // TODO:
+  // - onNotFound
+  // - onError
+  // - `strict` mode for route matching (trailing slashes)
+  // - middleware support
+  // - route groups / prefixes
   on(
     methods: Method | Method[],
     paths: string | string[],
