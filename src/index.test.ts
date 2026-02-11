@@ -1067,4 +1067,156 @@ describe("Ivy", () => {
       });
     });
   });
+
+  describe("notFound handler", () => {
+    it("should use custom notFound handler when route not found", async () => {
+      const app = new Ivy();
+
+      app.get("/exists", (c) => c.res.text("Found"));
+      app.notFound((c) => c.res.text("Custom Not Found", 404));
+
+      const req = new Request("http://localhost/notfound", { method: "GET" });
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(404);
+      expect(await response.text()).toBe("Custom Not Found");
+    });
+
+    it("should use custom notFound handler for unmatched HTTP methods", async () => {
+      const app = new Ivy();
+
+      app.get("/test", (c) => c.res.text("GET only"));
+      app.notFound((c) => c.res.json({ error: "Route not found" }, 404));
+
+      const req = new Request("http://localhost/test", { method: "POST" });
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({ error: "Route not found" });
+    });
+
+    it("should provide context with request info to notFound handler", async () => {
+      const app = new Ivy();
+
+      app.notFound((c) => {
+        return c.res.json({
+          pathname: c.req.pathname,
+          method: c.req.raw.method,
+        });
+      });
+
+      const req = new Request("http://localhost/missing/path", {
+        method: "POST",
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.json()).toEqual({
+        pathname: "/missing/path",
+        method: "POST",
+      });
+    });
+
+    it("should allow notFound handler to access query parameters", async () => {
+      const app = new Ivy();
+
+      app.notFound((c) => {
+        const debug = c.req.query("debug");
+        return c.res.json({ message: "Not found", debug });
+      });
+
+      const req = new Request("http://localhost/missing?debug=true", {
+        method: "GET",
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.json()).toEqual({
+        message: "Not found",
+        debug: "true",
+      });
+    });
+
+    it("should allow notFound handler to access headers", async () => {
+      const app = new Ivy();
+
+      app.notFound((c) => {
+        const accept = c.req.header("Accept");
+        return c.res.text(`Not found. Accept: ${accept}`, 404);
+      });
+
+      const req = new Request("http://localhost/missing", {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.text()).toBe("Not found. Accept: application/json");
+    });
+
+    it("should support async notFound handler", async () => {
+      const app = new Ivy();
+
+      app.notFound(async (c) => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        return c.res.text("Async not found", 404);
+      });
+
+      const req = new Request("http://localhost/async-missing", {
+        method: "GET",
+      });
+      const response = await app.fetch(req);
+
+      expect(await response.text()).toBe("Async not found");
+    });
+
+    it("should support method chaining with notFound", () => {
+      const app = new Ivy();
+
+      const result = app
+        .get("/one", (c) => c.res.text("One"))
+        .notFound((c) => c.res.text("Not found", 404))
+        .get("/two", (c) => c.res.text("Two"));
+
+      expect(result).toBe(app);
+    });
+
+    it("should use default 404 response when no notFound handler is set", async () => {
+      const app = new Ivy();
+
+      app.get("/exists", (c) => c.res.text("Found"));
+
+      const req = new Request("http://localhost/notfound", { method: "GET" });
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(404);
+      expect(await response.text()).toBe("Not Found");
+    });
+
+    it("should allow custom status codes in notFound handler", async () => {
+      const app = new Ivy();
+
+      app.notFound((c) => c.res.json({ error: "Gone" }, 410));
+
+      const req = new Request("http://localhost/missing", { method: "GET" });
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(410);
+      expect(await response.json()).toEqual({ error: "Gone" });
+    });
+
+    it("should handle notFound for different HTTP methods", async () => {
+      const app = new Ivy();
+
+      app.get("/api", (c) => c.res.text("API"));
+      app.notFound((c) =>
+        c.res.json({ error: "Not found", method: c.req.raw.method }),
+      );
+
+      const methods = ["POST", "PUT", "DELETE", "PATCH"];
+      for (const method of methods) {
+        const req = new Request("http://localhost/missing", { method });
+        const response = await app.fetch(req);
+        expect(await response.json()).toEqual({ error: "Not found", method });
+      }
+    });
+  });
 });

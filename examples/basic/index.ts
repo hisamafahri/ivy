@@ -213,5 +213,16 @@ app.get("/profile", (c) => {
   });
 });
 
-// 404 for unmatched routes is handled automatically
+// Custom 404 handler
+app.notFound((c) => {
+  return c.res.json(
+    {
+      error: "Not Found",
+      message: `The path ${c.req.pathname} does not exist`,
+      method: c.req.raw.method,
+    },
+    404,
+  );
+});
+
 export default app;

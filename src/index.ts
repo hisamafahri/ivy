@@ -12,6 +12,7 @@ interface RouteStore {
 
 export default class Ivy {
   private router: FindMyWay.Instance<FindMyWay.HTTPVersion.V1>;
+  private notFoundHandler?: Handler;
 
   constructor() {
     // Bind fetch to maintain context when called by Bun
@@ -101,6 +102,11 @@ export default class Ivy {
     return this;
   }
 
+  notFound(handler: Handler): this {
+    this.notFoundHandler = handler;
+    return this;
+  }
+
   async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const pathname = url.pathname;
@@ -125,6 +131,12 @@ export default class Ivy {
 
       const context = new Context(req, params, path);
       return await handler(context);
+    }
+
+    // Handle not found with custom handler or default response
+    if (this.notFoundHandler) {
+      const context = new Context(req, {}, pathname);
+      return await this.notFoundHandler(context);
     }
 
     return new Response("Not Found", { status: 404 });
