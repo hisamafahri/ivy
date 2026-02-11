@@ -1,3 +1,8 @@
+import type {
+  ContentfulStatusCode,
+  ContentlessStatusCode,
+} from "./lib/status-code";
+
 export interface IvyRequest {
   raw: Request;
   param: (name: string) => string | undefined;
@@ -22,10 +27,18 @@ export interface IvyRequest {
   routePathname: string;
 }
 
+export interface IvyResponse {
+  json: (data: any, status?: ContentfulStatusCode) => Response;
+  text: (content: string, status?: ContentfulStatusCode) => Response;
+  html: (content: string, status?: ContentfulStatusCode) => Response;
+  null: (status?: ContentlessStatusCode) => Response;
+}
+
 export class Context {
   // TODO:
   // - body validators (blocked by middleware implementation)
   req: IvyRequest;
+  res: IvyResponse;
   private bodyCache: ArrayBuffer | null = null;
 
   constructor(
@@ -145,26 +158,29 @@ export class Context {
       pathname: url.pathname,
       routePathname: routePathname,
     };
-  }
 
-  text(content: string, status = 200): Response {
-    return new Response(content, {
-      status,
-      headers: { "Content-Type": "text/plain" },
-    });
-  }
-
-  json(data: any, status = 200): Response {
-    return new Response(JSON.stringify(data), {
-      status,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  html(content: string, status = 200): Response {
-    return new Response(content, {
-      status,
-      headers: { "Content-Type": "text/html" },
-    });
+    this.res = {
+      text: (content: string, status = 200): Response => {
+        return new Response(content, {
+          status,
+          headers: { "Content-Type": "text/plain" },
+        });
+      },
+      json: (data: any, status = 200): Response => {
+        return new Response(JSON.stringify(data), {
+          status,
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+      html: (content: string, status = 200): Response => {
+        return new Response(content, {
+          status,
+          headers: { "Content-Type": "text/html" },
+        });
+      },
+      null: (status = 204): Response => {
+        return new Response(null, { status });
+      },
+    };
   }
 }

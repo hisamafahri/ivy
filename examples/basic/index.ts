@@ -4,12 +4,12 @@ const app = new Ivy();
 
 // Simple GET route
 app.get("/", (c) => {
-  return c.text("Hello World!");
+  return c.res.text("Hello World!");
 });
 
 // JSON response
 app.get("/users", (c) => {
-  return c.json({
+  return c.res.json({
     users: [
       { id: 1, name: "Alice" },
       { id: 2, name: "Bob" },
@@ -20,14 +20,14 @@ app.get("/users", (c) => {
 // Route with parameters
 app.get("/users/:id", (c) => {
   const id = c.req.param("id");
-  return c.json({ userId: id, name: `User ${id}` });
+  return c.res.json({ userId: id, name: `User ${id}` });
 });
 
 // Multiple route parameters
 app.get("/posts/:postId/comments/:commentId", (c) => {
   const postId = c.req.param("postId");
   const commentId = c.req.param("commentId");
-  return c.json({
+  return c.res.json({
     post: postId,
     comment: commentId,
   });
@@ -36,7 +36,7 @@ app.get("/posts/:postId/comments/:commentId", (c) => {
 // POST route with JSON body parser
 app.post("/users", async (c) => {
   const body = await c.req.json();
-  return c.json(
+  return c.res.json(
     {
       message: "User created",
       user: body,
@@ -45,10 +45,30 @@ app.post("/users", async (c) => {
   );
 });
 
+// DELETE route with null response (204 No Content)
+app.delete("/users/:id", (c) => {
+  const id = c.req.param("id");
+  // Perform deletion logic here
+  return c.res.null(); // Returns 204 by default
+});
+
+// PUT route with null response (304 Not Modified)
+app.put("/cache/:key", (c) => {
+  const key = c.req.param("key");
+  // Check if resource was modified, if not:
+  return c.res.null(304); // Returns 304 Not Modified
+});
+
+// POST route with null response (205 Reset Content)
+app.post("/form/clear", (c) => {
+  // Process form and tell client to reset the form
+  return c.res.null(205); // Returns 205 Reset Content
+});
+
 // Text body parser
 app.post("/echo", async (c) => {
   const text = await c.req.text();
-  return c.text(`You sent: ${text}`);
+  return c.res.text(`You sent: ${text}`);
 });
 
 // Form data body parser
@@ -58,7 +78,7 @@ app.post("/contact", async (c) => {
   const email = formData.get("email");
   const message = formData.get("message");
 
-  return c.json({
+  return c.res.json({
     message: "Contact form received",
     data: { name, email, message },
   });
@@ -69,7 +89,7 @@ app.post("/upload", async (c) => {
   const buffer = await c.req.arrayBuffer();
   const blob = await c.req.blob();
 
-  return c.json({
+  return c.res.json({
     message: "File uploaded",
     size: buffer.byteLength,
     blobSize: blob.size,
@@ -83,7 +103,7 @@ app.post("/analyze", async (c) => {
   const text = await c.req.text();
   const buffer = await c.req.arrayBuffer();
 
-  return c.json({
+  return c.res.json({
     parsedData: json,
     rawTextLength: text.length,
     bufferSize: buffer.byteLength,
@@ -92,7 +112,7 @@ app.post("/analyze", async (c) => {
 
 // HTML response
 app.get("/about", (c) => {
-  return c.html(`
+  return c.res.html(`
     <!DOCTYPE html>
     <html>
       <head>
@@ -108,14 +128,14 @@ app.get("/about", (c) => {
 
 // Multiple methods on same path
 app.on(["GET", "POST"], "/multi", (c) => {
-  return c.text(`Method: ${c.req.raw.method}`);
+  return c.res.text(`Method: ${c.req.raw.method}`);
 });
 
 // Query parameters - single value
 app.get("/search", (c) => {
   const query = c.req.query("q");
   const limit = c.req.query("limit") || "10";
-  return c.json({
+  return c.res.json({
     query,
     limit,
     results: [],
@@ -125,7 +145,7 @@ app.get("/search", (c) => {
 // Query parameters - get all at once
 app.get("/filter", (c) => {
   const { category, minPrice, maxPrice } = c.req.query();
-  return c.json({
+  return c.res.json({
     category,
     minPrice,
     maxPrice,
@@ -136,7 +156,7 @@ app.get("/filter", (c) => {
 // Multiple query values
 app.get("/tags", (c) => {
   const tags = c.req.queries("tag");
-  return c.json({
+  return c.res.json({
     tags: tags || [],
     count: tags?.length || 0,
   });
@@ -148,7 +168,7 @@ app.get("/users/:id/posts", (c) => {
   const page = c.req.query("page") || "1";
   const limit = c.req.query("limit") || "10";
 
-  return c.json({
+  return c.res.json({
     userId,
     page: parseInt(page),
     limit: parseInt(limit),
@@ -158,7 +178,7 @@ app.get("/users/:id/posts", (c) => {
 
 // Request metadata example
 app.get("/api/:version/info", (c) => {
-  return c.json({
+  return c.res.json({
     href: c.req.href,
     pathname: c.req.pathname,
     routePathname: c.req.routePathname,
@@ -173,7 +193,7 @@ app.get("/headers", (c) => {
   const accept = c.req.header("Accept");
   const authorization = c.req.header("Authorization");
 
-  return c.json({
+  return c.res.json({
     userAgent,
     accept,
     authorization: authorization ? "Present" : "Missing",
@@ -186,7 +206,7 @@ app.get("/profile", (c) => {
   const userId = c.req.cookie("user_id");
   const allCookies = c.req.cookie();
 
-  return c.json({
+  return c.res.json({
     sessionId,
     userId,
     cookieCount: Object.keys(allCookies).length,

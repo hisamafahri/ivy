@@ -5,13 +5,13 @@ const app = new Ivy();
 // JSON body parsing
 app.post("/api/json", async (c) => {
   const body = await c.req.json();
-  return c.json({ received: body, type: "json" });
+  return c.res.json({ received: body, type: "json" });
 });
 
 // Text body parsing
 app.post("/api/text", async (c) => {
   const body = await c.req.text();
-  return c.text(`You sent: ${body}`);
+  return c.res.text(`You sent: ${body}`);
 });
 
 // Form data parsing
@@ -19,13 +19,13 @@ app.post("/api/form", async (c) => {
   const formData = await c.req.formData();
   const name = formData.get("name");
   const email = formData.get("email");
-  return c.json({ name, email });
+  return c.res.json({ name, email });
 });
 
 // Binary data parsing
 app.post("/api/binary", async (c) => {
   const buffer = await c.req.arrayBuffer();
-  return c.json({ byteLength: buffer.byteLength });
+  return c.res.json({ byteLength: buffer.byteLength });
 });
 
 // Multiple body parser calls (demonstrating caching)
@@ -36,7 +36,7 @@ app.post("/api/multi", async (c) => {
   const text = await c.req.text();
   const buffer = await c.req.arrayBuffer();
 
-  return c.json({
+  return c.res.json({
     parsedAsJson: json,
     textLength: text.length,
     bufferSize: buffer.byteLength,

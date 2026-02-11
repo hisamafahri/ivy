@@ -6,7 +6,7 @@ describe("Ivy", () => {
     it("should register GET routes", async () => {
       const app = new Ivy();
 
-      app.get("/test", (c) => c.text("GET response"));
+      app.get("/test", (c) => c.res.text("GET response"));
 
       const req = new Request("http://localhost/test", { method: "GET" });
       const response = await app.fetch(req);
@@ -18,7 +18,7 @@ describe("Ivy", () => {
     it("should register POST routes", async () => {
       const app = new Ivy();
 
-      app.post("/test", (c) => c.text("POST response"));
+      app.post("/test", (c) => c.res.text("POST response"));
 
       const req = new Request("http://localhost/test", { method: "POST" });
       const response = await app.fetch(req);
@@ -30,7 +30,7 @@ describe("Ivy", () => {
     it("should register PUT routes", async () => {
       const app = new Ivy();
 
-      app.put("/test", (c) => c.text("PUT response"));
+      app.put("/test", (c) => c.res.text("PUT response"));
 
       const req = new Request("http://localhost/test", { method: "PUT" });
       const response = await app.fetch(req);
@@ -42,7 +42,7 @@ describe("Ivy", () => {
     it("should register DELETE routes", async () => {
       const app = new Ivy();
 
-      app.delete("/test", (c) => c.text("DELETE response"));
+      app.delete("/test", (c) => c.res.text("DELETE response"));
 
       const req = new Request("http://localhost/test", { method: "DELETE" });
       const response = await app.fetch(req);
@@ -54,7 +54,7 @@ describe("Ivy", () => {
     it("should register PATCH routes", async () => {
       const app = new Ivy();
 
-      app.patch("/test", (c) => c.text("PATCH response"));
+      app.patch("/test", (c) => c.res.text("PATCH response"));
 
       const req = new Request("http://localhost/test", { method: "PATCH" });
       const response = await app.fetch(req);
@@ -66,7 +66,7 @@ describe("Ivy", () => {
     it("should register OPTIONS routes", async () => {
       const app = new Ivy();
 
-      app.options("/test", (c) => c.text("OPTIONS response"));
+      app.options("/test", (c) => c.res.text("OPTIONS response"));
 
       const req = new Request("http://localhost/test", { method: "OPTIONS" });
       const response = await app.fetch(req);
@@ -79,9 +79,9 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       const result = app
-        .get("/one", (c) => c.text("One"))
-        .get("/two", (c) => c.text("Two"))
-        .post("/three", (c) => c.text("Three"));
+        .get("/one", (c) => c.res.text("One"))
+        .get("/two", (c) => c.res.text("Two"))
+        .post("/three", (c) => c.res.text("Three"));
 
       expect(result).toBe(app);
     });
@@ -91,7 +91,7 @@ describe("Ivy", () => {
     it("should register a single method with single path", async () => {
       const app = new Ivy();
 
-      app.on("GET", "/test", (c) => c.text("GET response"));
+      app.on("GET", "/test", (c) => c.res.text("GET response"));
 
       const req = new Request("http://localhost/test", { method: "GET" });
       const response = await app.fetch(req);
@@ -103,7 +103,9 @@ describe("Ivy", () => {
     it("should register multiple methods with single path", async () => {
       const app = new Ivy();
 
-      app.on(["GET", "POST"], "/test", (c) => c.text("Multi-method response"));
+      app.on(["GET", "POST"], "/test", (c) =>
+        c.res.text("Multi-method response"),
+      );
 
       const getReq = new Request("http://localhost/test", { method: "GET" });
       const getRes = await app.fetch(getReq);
@@ -117,7 +119,9 @@ describe("Ivy", () => {
     it("should register single method with multiple paths", async () => {
       const app = new Ivy();
 
-      app.on("GET", ["/test1", "/test2"], (c) => c.text("Multi-path response"));
+      app.on("GET", ["/test1", "/test2"], (c) =>
+        c.res.text("Multi-path response"),
+      );
 
       const req1 = new Request("http://localhost/test1", { method: "GET" });
       const res1 = await app.fetch(req1);
@@ -132,7 +136,7 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       app.on(["GET", "POST"], ["/api/v1", "/api/v2"], (c) =>
-        c.text("Multi response"),
+        c.res.text("Multi response"),
       );
 
       const tests = [
@@ -155,8 +159,8 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       const result = app
-        .on("GET", "/one", (c) => c.text("One"))
-        .on(["GET", "POST"], "/two", (c) => c.text("Two"));
+        .on("GET", "/one", (c) => c.res.text("One"))
+        .on(["GET", "POST"], "/two", (c) => c.res.text("Two"));
 
       expect(result).toBe(app);
     });
@@ -164,8 +168,8 @@ describe("Ivy", () => {
     it("should work alongside other method helpers", async () => {
       const app = new Ivy();
 
-      app.get("/get-route", (c) => c.text("GET helper"));
-      app.on("POST", "/post-route", (c) => c.text("POST on method"));
+      app.get("/get-route", (c) => c.res.text("GET helper"));
+      app.on("POST", "/post-route", (c) => c.res.text("POST on method"));
 
       const getReq = new Request("http://localhost/get-route", {
         method: "GET",
@@ -185,8 +189,8 @@ describe("Ivy", () => {
     it("should route requests to correct handler", async () => {
       const app = new Ivy();
 
-      app.get("/", (c) => c.text("Home"));
-      app.get("/about", (c) => c.text("About"));
+      app.get("/", (c) => c.res.text("Home"));
+      app.get("/about", (c) => c.res.text("About"));
 
       const homeReq = new Request("http://localhost/", { method: "GET" });
       const homeRes = await app.fetch(homeReq);
@@ -200,8 +204,8 @@ describe("Ivy", () => {
     it("should differentiate between HTTP methods", async () => {
       const app = new Ivy();
 
-      app.get("/resource", (c) => c.text("GET resource"));
-      app.post("/resource", (c) => c.text("POST resource"));
+      app.get("/resource", (c) => c.res.text("GET resource"));
+      app.post("/resource", (c) => c.res.text("POST resource"));
 
       const getReq = new Request("http://localhost/resource", {
         method: "GET",
@@ -219,7 +223,7 @@ describe("Ivy", () => {
     it("should return 404 for unmatched routes", async () => {
       const app = new Ivy();
 
-      app.get("/exists", (c) => c.text("Found"));
+      app.get("/exists", (c) => c.res.text("Found"));
 
       const req = new Request("http://localhost/notfound", { method: "GET" });
       const response = await app.fetch(req);
@@ -231,7 +235,7 @@ describe("Ivy", () => {
     it("should return 404 for unmatched HTTP methods", async () => {
       const app = new Ivy();
 
-      app.get("/test", (c) => c.text("GET only"));
+      app.get("/test", (c) => c.res.text("GET only"));
 
       const req = new Request("http://localhost/test", { method: "POST" });
       const response = await app.fetch(req);
@@ -245,7 +249,7 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       app.get("/test", (c) => {
-        return c.text(c.req.raw.url);
+        return c.res.text(c.req.raw.url);
       });
 
       const req = new Request("http://localhost/test", { method: "GET" });
@@ -258,7 +262,7 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       app.get("/method", (c) => {
-        return c.text(c.req.raw.method);
+        return c.res.text(c.req.raw.method);
       });
 
       const req = new Request("http://localhost/method", { method: "GET" });
@@ -270,7 +274,7 @@ describe("Ivy", () => {
     it("should support JSON responses", async () => {
       const app = new Ivy();
 
-      app.get("/json", (c) => c.json({ message: "Hello" }));
+      app.get("/json", (c) => c.res.json({ message: "Hello" }));
 
       const req = new Request("http://localhost/json", { method: "GET" });
       const response = await app.fetch(req);
@@ -282,13 +286,56 @@ describe("Ivy", () => {
     it("should support HTML responses", async () => {
       const app = new Ivy();
 
-      app.get("/html", (c) => c.html("<h1>Title</h1>"));
+      app.get("/html", (c) => c.res.html("<h1>Title</h1>"));
 
       const req = new Request("http://localhost/html", { method: "GET" });
       const response = await app.fetch(req);
 
       expect(response.headers.get("Content-Type")).toBe("text/html");
       expect(await response.text()).toBe("<h1>Title</h1>");
+    });
+
+    it("should support null responses with default status 204", async () => {
+      const app = new Ivy();
+
+      app.delete("/resource/:id", (c) => c.res.null());
+
+      const req = new Request("http://localhost/resource/123", {
+        method: "DELETE",
+      });
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(204);
+      expect(await response.text()).toBe("");
+      expect(response.headers.get("Content-Type")).toBeNull();
+    });
+
+    it("should support null responses with custom status", async () => {
+      const app = new Ivy();
+
+      app.put("/cache/:key", (c) => c.res.null(304));
+
+      const req = new Request("http://localhost/cache/user-data", {
+        method: "PUT",
+      });
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(304);
+      expect(await response.text()).toBe("");
+    });
+
+    it("should support null response with 205 Reset Content", async () => {
+      const app = new Ivy();
+
+      app.post("/form/reset", (c) => c.res.null(205));
+
+      const req = new Request("http://localhost/form/reset", {
+        method: "POST",
+      });
+      const response = await app.fetch(req);
+
+      expect(response.status).toBe(205);
+      expect(await response.text()).toBe("");
     });
   });
 
@@ -298,7 +345,7 @@ describe("Ivy", () => {
 
       app.get("/async", async (c) => {
         await new Promise((resolve) => setTimeout(resolve, 10));
-        return c.text("Async response");
+        return c.res.text("Async response");
       });
 
       const req = new Request("http://localhost/async", { method: "GET" });
@@ -312,7 +359,7 @@ describe("Ivy", () => {
     it("should match wildcard in middle of path", async () => {
       const app = new Ivy();
 
-      app.get("/wild/*/card", (c) => c.text("GET /wild/*/card"));
+      app.get("/wild/*/card", (c) => c.res.text("GET /wild/*/card"));
 
       const req = new Request("http://localhost/wild/anything/card", {
         method: "GET",
@@ -326,7 +373,7 @@ describe("Ivy", () => {
     it("should match wildcard with different values", async () => {
       const app = new Ivy();
 
-      app.get("/files/*/download", (c) => c.text("Download"));
+      app.get("/files/*/download", (c) => c.res.text("Download"));
 
       const req1 = new Request("http://localhost/files/123/download", {
         method: "GET",
@@ -344,7 +391,7 @@ describe("Ivy", () => {
     it("should match multiple wildcards", async () => {
       const app = new Ivy();
 
-      app.get("/api/*/users/*/profile", (c) => c.text("Profile"));
+      app.get("/api/*/users/*/profile", (c) => c.res.text("Profile"));
 
       const req = new Request("http://localhost/api/v1/users/123/profile", {
         method: "GET",
@@ -358,7 +405,7 @@ describe("Ivy", () => {
     it("should not match incorrect wildcard paths", async () => {
       const app = new Ivy();
 
-      app.get("/wild/*/card", (c) => c.text("Match"));
+      app.get("/wild/*/card", (c) => c.res.text("Match"));
 
       const req = new Request("http://localhost/wild/card", { method: "GET" });
       const response = await app.fetch(req);
@@ -373,7 +420,7 @@ describe("Ivy", () => {
 
       app.get("/user/:name", (c) => {
         const name = c.req.param("name");
-        return c.text(`Hello ${name}`);
+        return c.res.text(`Hello ${name}`);
       });
 
       const req = new Request("http://localhost/user/john", { method: "GET" });
@@ -389,7 +436,7 @@ describe("Ivy", () => {
       app.get("/users/:userId/posts/:postId", (c) => {
         const userId = c.req.param("userId");
         const postId = c.req.param("postId");
-        return c.json({ userId, postId });
+        return c.res.json({ userId, postId });
       });
 
       const req = new Request("http://localhost/users/123/posts/456", {
@@ -406,7 +453,7 @@ describe("Ivy", () => {
 
       app.get("/product/:id", (c) => {
         const id = c.req.param("id");
-        return c.text(`Product ${id}`);
+        return c.res.text(`Product ${id}`);
       });
 
       const req1 = new Request("http://localhost/product/abc", {
@@ -427,7 +474,9 @@ describe("Ivy", () => {
 
       app.get("/test/:id", (c) => {
         const nonExistent = c.req.param("name");
-        return c.text(nonExistent === undefined ? "undefined" : nonExistent);
+        return c.res.text(
+          nonExistent === undefined ? "undefined" : nonExistent,
+        );
       });
 
       const req = new Request("http://localhost/test/123", { method: "GET" });
@@ -441,7 +490,7 @@ describe("Ivy", () => {
 
       app.post("/api/:version/users", (c) => {
         const version = c.req.param("version");
-        return c.json({ version, action: "create" });
+        return c.res.json({ version, action: "create" });
       });
 
       const req = new Request("http://localhost/api/v2/users", {
@@ -460,7 +509,7 @@ describe("Ivy", () => {
 
       app.on(["GET", "POST"], "/resource/:id", (c) => {
         const id = c.req.param("id");
-        return c.text(`Resource ${id}`);
+        return c.res.text(`Resource ${id}`);
       });
 
       const getReq = new Request("http://localhost/resource/123", {
@@ -480,7 +529,7 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       app.get("/user/:id/profile/:section", (c) => {
-        return c.json({
+        return c.res.json({
           id: c.req.params.id,
           section: c.req.params.section,
         });
@@ -501,7 +550,7 @@ describe("Ivy", () => {
 
       app.get("/search", (c) => {
         const q = c.req.query("q");
-        return c.text(`Search: ${q}`);
+        return c.res.text(`Search: ${q}`);
       });
 
       const req = new Request("http://localhost/search?q=hello", {
@@ -517,7 +566,7 @@ describe("Ivy", () => {
 
       app.get("/search", (c) => {
         const { q, limit, offset } = c.req.query();
-        return c.json({ q, limit, offset });
+        return c.res.json({ q, limit, offset });
       });
 
       const req = new Request(
@@ -538,7 +587,7 @@ describe("Ivy", () => {
 
       app.get("/filter", (c) => {
         const tags = c.req.queries("tags");
-        return c.json({ tags });
+        return c.res.json({ tags });
       });
 
       const req = new Request("http://localhost/filter?tags=A&tags=B&tags=C", {
@@ -555,7 +604,7 @@ describe("Ivy", () => {
       app.get("/users/:id", (c) => {
         const id = c.req.param("id");
         const format = c.req.query("format");
-        return c.json({ userId: id, format });
+        return c.res.json({ userId: id, format });
       });
 
       const req = new Request("http://localhost/users/123?format=json", {
@@ -571,7 +620,7 @@ describe("Ivy", () => {
 
       app.get("/search", (c) => {
         const q = c.req.query("q");
-        return c.text(`Search: ${q}`);
+        return c.res.text(`Search: ${q}`);
       });
 
       const req = new Request("http://localhost/search?q=hello%20world", {
@@ -588,7 +637,7 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       app.get("/users/:id", (c) => {
-        return c.json({ pathname: c.req.pathname });
+        return c.res.json({ pathname: c.req.pathname });
       });
 
       const req = new Request("http://localhost/users/123?auto=true", {
@@ -603,7 +652,7 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       app.get("/test", (c) => {
-        return c.json({ href: c.req.href });
+        return c.res.json({ href: c.req.href });
       });
 
       const req = new Request("http://localhost:8787/test?foo=bar", {
@@ -620,7 +669,7 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       app.get("/users/:userId", (c) => {
-        return c.json({
+        return c.res.json({
           pathname: c.req.pathname,
           routePathname: c.req.routePathname,
           userId: c.req.param("userId"),
@@ -643,7 +692,7 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       app.get("/files/*/download", (c) => {
-        return c.json({
+        return c.res.json({
           pathname: c.req.pathname,
           routePathname: c.req.routePathname,
         });
@@ -664,7 +713,7 @@ describe("Ivy", () => {
       const app = new Ivy();
 
       app.get("/api/:version/users/:id", (c) => {
-        return c.json({
+        return c.res.json({
           href: c.req.href,
           pathname: c.req.pathname,
           routePathname: c.req.routePathname,
@@ -697,7 +746,7 @@ describe("Ivy", () => {
 
       app.post("/api/data", async (c) => {
         const body = await c.req.json();
-        return c.json({ received: body });
+        return c.res.json({ received: body });
       });
 
       const req = new Request("http://localhost/api/data", {
@@ -717,7 +766,7 @@ describe("Ivy", () => {
 
       app.post("/api/echo", async (c) => {
         const body = await c.req.text();
-        return c.text(`Received: ${body}`);
+        return c.res.text(`Received: ${body}`);
       });
 
       const req = new Request("http://localhost/api/echo", {
@@ -737,7 +786,7 @@ describe("Ivy", () => {
         const formData = await c.req.formData();
         const name = formData.get("name");
         const email = formData.get("email");
-        return c.json({ name, email });
+        return c.res.json({ name, email });
       });
 
       const formData = new FormData();
@@ -761,7 +810,7 @@ describe("Ivy", () => {
 
       app.post("/api/binary", async (c) => {
         const buffer = await c.req.arrayBuffer();
-        return c.json({ byteLength: buffer.byteLength });
+        return c.res.json({ byteLength: buffer.byteLength });
       });
 
       const data = new Uint8Array([1, 2, 3, 4, 5]);
@@ -779,7 +828,7 @@ describe("Ivy", () => {
 
       app.post("/api/blob", async (c) => {
         const blob = await c.req.blob();
-        return c.json({ size: blob.size });
+        return c.res.json({ size: blob.size });
       });
 
       const blob = new Blob(["test content"], { type: "text/plain" });
@@ -800,7 +849,7 @@ describe("Ivy", () => {
       app.post("/api/multi", async (c) => {
         const text1 = await c.req.text();
         const text2 = await c.req.text();
-        return c.json({ text1, text2, same: text1 === text2 });
+        return c.res.json({ text1, text2, same: text1 === text2 });
       });
 
       const req = new Request("http://localhost/api/multi", {
@@ -822,7 +871,7 @@ describe("Ivy", () => {
       app.post("/api/test", async (c) => {
         const body = await c.req.json();
         const method = c.req.raw.method;
-        return c.json({ body, method });
+        return c.res.json({ body, method });
       });
 
       const req = new Request("http://localhost/api/test", {
@@ -845,7 +894,7 @@ describe("Ivy", () => {
         const json = await c.req.json();
         const text = await c.req.text();
         const buffer = await c.req.arrayBuffer();
-        return c.json({
+        return c.res.json({
           json,
           textLength: text.length,
           bufferLength: buffer.byteLength,
@@ -872,7 +921,7 @@ describe("Ivy", () => {
 
       app.post("/api/empty", async (c) => {
         const text = await c.req.text();
-        return c.json({ isEmpty: text === "", length: text.length });
+        return c.res.json({ isEmpty: text === "", length: text.length });
       });
 
       const req = new Request("http://localhost/api/empty", {
@@ -891,7 +940,7 @@ describe("Ivy", () => {
 
       app.get("/test", (c) => {
         const userAgent = c.req.header("User-Agent");
-        return c.text(`UA: ${userAgent}`);
+        return c.res.text(`UA: ${userAgent}`);
       });
 
       const req = new Request("http://localhost/test", {
@@ -908,7 +957,7 @@ describe("Ivy", () => {
 
       app.get("/test", (c) => {
         const header = c.req.header("X-Custom-Header");
-        return c.text(header === undefined ? "undefined" : header);
+        return c.res.text(header === undefined ? "undefined" : header);
       });
 
       const req = new Request("http://localhost/test", { method: "GET" });
@@ -924,7 +973,7 @@ describe("Ivy", () => {
         const contentType1 = c.req.header("Content-Type");
         const contentType2 = c.req.header("content-type");
         const contentType3 = c.req.header("CONTENT-TYPE");
-        return c.json({
+        return c.res.json({
           contentType1,
           contentType2,
           contentType3,
@@ -951,7 +1000,7 @@ describe("Ivy", () => {
         const userAgent = c.req.header("User-Agent");
         const accept = c.req.header("Accept");
         const authorization = c.req.header("Authorization");
-        return c.json({ userAgent, accept, authorization });
+        return c.res.json({ userAgent, accept, authorization });
       });
 
       const req = new Request("http://localhost/api", {
@@ -977,7 +1026,7 @@ describe("Ivy", () => {
       app.post("/webhook", (c) => {
         const signature = c.req.header("X-Webhook-Signature");
         const timestamp = c.req.header("X-Webhook-Timestamp");
-        return c.json({ signature, timestamp });
+        return c.res.json({ signature, timestamp });
       });
 
       const req = new Request("http://localhost/webhook", {
@@ -1002,7 +1051,7 @@ describe("Ivy", () => {
         const id = c.req.param("id");
         const format = c.req.query("format");
         const accept = c.req.header("Accept");
-        return c.json({ userId: id, format, accept });
+        return c.res.json({ userId: id, format, accept });
       });
 
       const req = new Request("http://localhost/users/123?format=compact", {
