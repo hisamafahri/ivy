@@ -87,5 +87,3 @@ app.get("/new-location", (c) => {
 });
 
 app.listen();
-
-export default app;

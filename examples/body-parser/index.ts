@@ -42,17 +42,3 @@ app.post("/api/multi", async (c) => {
     bufferSize: buffer.byteLength,
   });
 });
-
-console.log("Server running on http://localhost:3000");
-console.log("\nExample requests:");
-console.log(
-  '  curl -X POST http://localhost:3000/api/json -H "Content-Type: application/json" -d \'{"name":"John","age":30}\'',
-);
-console.log(
-  '  curl -X POST http://localhost:3000/api/text -H "Content-Type: text/plain" -d "Hello World"',
-);
-console.log(
-  '  curl -X POST http://localhost:3000/api/form -F "name=Alice" -F "email=alice@example.com"',
-);
-
-export default app;
