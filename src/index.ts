@@ -1,5 +1,8 @@
 import FindMyWay from "find-my-way";
-import { VixyContext } from "./context";
+import { VixyContext, type VixyRequest, type VixyResponse } from "./context";
+
+export { VixyContext };
+export type { VixyRequest, VixyResponse };
 
 type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS";
 
@@ -7,7 +10,10 @@ type Handler = (c: VixyContext) => Response | Promise<Response>;
 
 export type Next = () => Promise<void>;
 
-type Middleware = (c: VixyContext, next: Next) => Promise<Response | void>;
+export type Middleware = (
+  c: VixyContext,
+  next: Next,
+) => Promise<Response | void>;
 
 interface RouteStore {
   handler: Handler;
